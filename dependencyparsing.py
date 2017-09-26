@@ -41,17 +41,18 @@ def __swap(nlp_tag):
                             ls_from_index_compound.append(com_dependency['index_to'])
                     # no compound word found, swap NN* and DT
                     if is_compound == 0:
-                        sentence_swap[index_from], sentence_swap[index_to] = sentence_swap[index_to], sentence_swap[index_from]
+                        sentence_swap[index_to] = sentence_swap[index_from]
                     # compound word found
                     else:
                         # first swap the root NN with DT
-                        sentence_swap[index_from], sentence_swap[index_to] = sentence_swap[index_to], sentence_swap[index_from]
+                        sentence_swap[index_to] = sentence_swap[index_from]
                         ls_word_to_move = []
                         # record the index of the words which need to be moved
+                        ls_from_index_compound.reverse()
                         for index in ls_from_index_compound:
                             ls_word_to_move.append(sentence_swap[index])
                         # remove the words from the original list
-                        sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_from_index_compound]
+                        # sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_from_index_compound]
                         # insert the removed words at the beginning
                         for word in ls_word_to_move:
                             sentence_swap.insert(0, word)
@@ -61,33 +62,64 @@ def __swap(nlp_tag):
                 # simply swap the part "DT2->NN*" with DT1
                 elif [tag_pos_from, tag_pos_to] == ["DT", "DT"]:
                     nmod_existed = 0
-                    index_end = 0;
-                    for item_dependency in ls_dependency:
-                        if item_dependency['type_dep'] == "nmod":
+                    index_end = 0
+
+                    # find the NN* through nmod dependency
+                    for nmod_dependency in ls_dependency:
+                        if nmod_dependency['type_dep'] == "nmod":
                             if nmod_existed == 0:
-                                index_end = item_dependency['index_to']
+                                index_end = nmod_dependency['index_to']
                                 nmod_existed = 1
 
                     if nmod_existed == 0:
-                        sentence_swap[index_from], sentence_swap[index_to] = sentence_swap[index_to],sentence_swap[index_from]
+                        sentence_swap[index_to] = sentence_swap[index_from]
                     elif nmod_existed == 1:
-                        sentence_swap[index_from], sentence_swap[index_to] = sentence_swap[index_to],sentence_swap[index_from]
-                        # generate the index of the words which need to be moved
-                        ls_moved_index = [i for i in range(index_from+1, index_end+1)]
-                        ls_moved_index.reverse()
-                        # print(ls_moved_index)
-                        ls_word_to_move = []
-                        # record the words to be moved
-                        for index in ls_moved_index:
-                            ls_word_to_move.append(sentence_swap[index])
-                        # remove the words from the message
-                        sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_moved_index]
-                        for word in ls_word_to_move:
-                            sentence_swap.insert(1, word)
+                        sentence_swap[index_to] = sentence_swap[index_from]
+
+                        # Search compound NN
+                        is_compound = 0
+                        ls_from_index_compound = []
+                        for com_dependency in ls_dependency:
+                            # if compound is found and they share a same governor, the word is a part of the compound word
+                            if com_dependency['type_dep'] == 'compound' and com_dependency['index_from'] == index_end:
+                                if is_compound == 0:
+                                    is_compound = 1
+                                ls_from_index_compound.append(com_dependency['index_to'])
+                                print(ls_from_index_compound)
+                        # no compound word found, swap NN* and DT
+                        if is_compound == 0:
+                            sentence_swap[index_to] = sentence_swap[index_from]
+                        # compound word found
+                        else:
+                            # first swap the root NN with DT
+                            sentence_swap[index_to] = sentence_swap[index_end]
+                            ls_word_to_move = []
+                            # record the index of the words which need to be moved
+                            ls_from_index_compound.reverse()
+                            for index in ls_from_index_compound:
+                                ls_word_to_move.append(sentence_swap[index])
+                            # remove the words from the original list
+                            # sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_from_index_compound]
+                            # insert the removed words at the beginning
+                            for word in ls_word_to_move:
+                                sentence_swap.insert(0, word)
+
+                        # # generate the index of the words which need to be moved
+                        # ls_moved_index = [i for i in range(index_from+1, index_end+1)]
+                        # ls_moved_index.reverse()
+                        # # print(ls_moved_index)
+                        # ls_word_to_move = []
+                        # # record the words to be moved
+                        # for index in ls_moved_index:
+                        #     ls_word_to_move.append(sentence_swap[index])
+                        # # remove the words from the message
+                        # sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_moved_index]
+                        # for word in ls_word_to_move:
+                        #     sentence_swap.insert(1, word)
 
     return sentence_swap
 
-message = "These are some of the books in the library."
+message = "This is some of the library card that I would like to borrow"
 result_tags = stanford_tree(message)
 #print(result_tags)
 

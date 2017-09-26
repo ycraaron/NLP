@@ -1,7 +1,7 @@
 from pycorenlp import StanfordCoreNLP
 
-nlp = StanfordCoreNLP('http://localhost:9000')
-# nlp = StanfordCoreNLP('http://192.168.0.100:9000')
+# nlp = StanfordCoreNLP('http://localhost:9000')
+nlp = StanfordCoreNLP('http://192.168.0.100:9000')
 
 
 def stanford_tree(line, annotators='tokenize,ssplit,pos,ner,parse,depparse,coref'):
@@ -51,8 +51,6 @@ def __swap(nlp_tag):
                         ls_from_index_compound.reverse()
                         for index in ls_from_index_compound:
                             ls_word_to_move.append(sentence_swap[index])
-                        # remove the words from the original list
-                        # sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_from_index_compound]
                         # insert the removed words at the beginning
                         for word in ls_word_to_move:
                             sentence_swap.insert(0, word)
@@ -70,12 +68,14 @@ def __swap(nlp_tag):
                             if nmod_existed == 0:
                                 index_end = nmod_dependency['index_to']
                                 nmod_existed = 1
-
+                    print(nmod_existed)
+                    # quit()
                     if nmod_existed == 0:
-                        sentence_swap[index_to] = sentence_swap[index_from]
+                        sentence_swap[index_to] = sentence_swap[index_end]
                     elif nmod_existed == 1:
-                        sentence_swap[index_to] = sentence_swap[index_from]
-
+                        # sentence_swap[index_to] = sentence_swap[index_end]
+                        # print(sentence_swap)
+                        # print sen
                         # Search compound NN
                         is_compound = 0
                         ls_from_index_compound = []
@@ -88,7 +88,7 @@ def __swap(nlp_tag):
                                 print(ls_from_index_compound)
                         # no compound word found, swap NN* and DT
                         if is_compound == 0:
-                            sentence_swap[index_to] = sentence_swap[index_from]
+                            sentence_swap[index_to] = sentence_swap[index_end]
                         # compound word found
                         else:
                             # first swap the root NN with DT
@@ -98,28 +98,13 @@ def __swap(nlp_tag):
                             ls_from_index_compound.reverse()
                             for index in ls_from_index_compound:
                                 ls_word_to_move.append(sentence_swap[index])
-                            # remove the words from the original list
-                            # sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_from_index_compound]
                             # insert the removed words at the beginning
                             for word in ls_word_to_move:
                                 sentence_swap.insert(0, word)
 
-                        # # generate the index of the words which need to be moved
-                        # ls_moved_index = [i for i in range(index_from+1, index_end+1)]
-                        # ls_moved_index.reverse()
-                        # # print(ls_moved_index)
-                        # ls_word_to_move = []
-                        # # record the words to be moved
-                        # for index in ls_moved_index:
-                        #     ls_word_to_move.append(sentence_swap[index])
-                        # # remove the words from the message
-                        # sentence_swap = [i for j, i in enumerate(sentence_swap) if j not in ls_moved_index]
-                        # for word in ls_word_to_move:
-                        #     sentence_swap.insert(1, word)
-
     return sentence_swap
 
-message = "This is some of the library card that I would like to borrow"
+message = "This was the book that I borrowed last week"
 result_tags = stanford_tree(message)
 #print(result_tags)
 

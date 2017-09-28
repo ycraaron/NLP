@@ -90,98 +90,150 @@ def __search(message, stop_words):
     return ls_result
 
 
-def __filter(segment):
+def __filter(segment, splitter):
+    #print("In filter")
     #print(segment)
     ls_result = []
-    if "and" in segment:
-        and_result = segment.split("and")
-        #print("And found")
-        for and_word in and_result:
-            if "," in and_word:
-                #print(", found")
-                comma_result = and_word.split(',')
-                for comma_word in comma_result:
-                    if comma_word:
-                        ls_result.append(comma_word)
+    if splitter == "all":
+        and_seg = segment.split("and")
+        for and_word in and_seg:
+            #print("andword", and_word)
+            if ',' in and_word:
+                #print(and_word)
+                comma_seg = and_word.split(',')
+                for comma_word in comma_seg:
+                    ls_result.append(comma_word)
             else:
                 ls_result.append(and_word)
-
-    # segment = word.split("and")
-    # if len(segment) > 2:
-    #     for seg in segment:
-    #         seg.split(",")
+    else:
+        ls_result = segment.split(splitter)
     return ls_result
 
 
 def __parse_result(r1, r2, ls_result, stop_words):
-    print(r1, r2)
+    ls_result = []
+    # print(r1, r2)
     if r1:
         if r1 == r2:
-            r1 = __filter(r1)
-            print(r1)
-            for word in r1:
-                if word not in stop_words:
-                    ls_result.append(word)
-        else:
-            r1 = __filter(r1)
-            for word in r1:
-                if word not in stop_words:
-                    ls_result.append(word)
-            if r2:
-                r2 = __filter(r2)
-                for word in r2:
+            if "and " in r1 and ',' in r1:
+                r1 = __filter(r1, "all")
+                for word in r1:
                     if word not in stop_words:
                         ls_result.append(word)
+            elif "and " in r1:
+                r1 = __filter(r1, "and")
+                # print(r1)
+                for word in r1:
+                    if word not in stop_words:
+                        ls_result.append(word)
+            elif ',' in r1:
+                r1 = __filter(r1, ',')
+                # print(r1)
+                for word in r1:
+                    if word not in stop_words:
+                        ls_result.append(word)
+            else:
+                # print("else",r1)
+                if r1 not in stop_words:
+                    ls_result.append(r1)
+        else:
+            if "and " in r1 and ',' in r1:
+                r1 = __filter(r1, "all")
+                for word in r1:
+                    if word not in stop_words:
+                        ls_result.append(word)
+            elif "and " in r1:
+                r1 = __filter(r1, "and")
+                # print(r1)
+                for word in r1:
+                    if word not in stop_words:
+                        ls_result.append(word)
+            elif ',' in r1:
+                r1 = __filter(r1, ',')
+                # print(r1)
+                for word in r1:
+                    if word not in stop_words:
+                        ls_result.append(word)
+            else:
+                if r1 not in stop_words:
+                    ls_result.append(r1)
+
+            if r2:
+                if "and " in r2 and ',' in r2:
+                    r2= __filter(r2, "all")
+                    for word in r2:
+                        if word not in stop_words:
+                            ls_result.append(word)
+                elif "and " in r2:
+                    r2 = __filter(r2, "and")
+                    # print(r2)
+                    for word in r2:
+                        if word not in stop_words:
+                            ls_result.append(word)
+                elif ',' in r2:
+                    r2 = __filter(r2, ',')
+                    # print(r2)
+                    for word in r2:
+                        if word not in stop_words:
+                            ls_result.append(word)
+                else:
+                    for word in r2:
+                        if word not in stop_words:
+                            ls_result.append(word)
     return ls_result
 
 
 def __search_new(message, stop_words):
-    condition1 = r"\b(?:(?:book|with )?status)(?: of)? (?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z]+))\b"
-    condition2 = r"\b(?:do(?:es)?) (?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z]+))(?: (?:mean[s]{0,1}?|stand[s]{0,1}? for|refer[s]{0,1}? to))\b"
-    condition3 = r"\b(?:what(?:`s| is)(?: the meaning of)? (?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z]+)))\b"
-    condition4 = r"\b(?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z]+))(?: (?:status))\b"
+    condition1 = r"\b(?:(?:book|with )?status)(?: of)? (?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z ]+))\b"
+    condition2 = r"\b(?:do(?:es)?) (?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z ]+))(?: (?:mean[s]{0,1}?|stand[s]{0,1}? for|refer[s]{0,1}? to))\b"
+    condition3 = r"\b(?:what(?:`s| is)(?: the meaning of)? (?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z ]+)))\b"
+    # condition4 = r"\b(?P<target>(?:[a-z]+,? (?:[a-z ]+)?and (?:[a-z ]+))|(?P<target2>[a-z ]+))(?: (?:status))\b"
 
     result_cond1 = re.search(condition1, message, flags=re.IGNORECASE)
     result_cond2 = re.search(condition2, message, flags=re.IGNORECASE)
     result_cond3 = re.search(condition3, message, flags=re.IGNORECASE)
-    result_cond4 = re.search(condition4, message, flags=re.IGNORECASE)
+    # result_cond4 = re.search(condition4, message, flags=re.IGNORECASE)
 
     ls_result = []
     if result_cond1:
         # print(1)
         target1 = result_cond1.group('target')
         target2 = result_cond1.group('target2')
-        ls_result = __parse_result(target1, target2, ls_result, stop_words)
+        for word in __parse_result(target1, target2, ls_result, stop_words):
+            ls_result.append(word)
+    # print(ls_result)
     if result_cond2:
-        print(2)
+        # print(2)
         target1 = result_cond2.group('target')
         target2 = result_cond2.group('target2')
-        ls_result = __parse_result(target1, target2, ls_result, stop_words)
+        for word in __parse_result(target1, target2, ls_result, stop_words):
+            ls_result.append(word)
+    # print(ls_result)
     if result_cond3:
         # print(3)
         target1 = result_cond3.group('target')
         target2 = result_cond3.group('target2')
-        ls_result = __parse_result(target1, target2, ls_result, stop_words)
-    if result_cond4:
-        # print(3)
-        target1 = result_cond4.group('target')
-        target2 = result_cond4.group('target2')
-        ls_result = __parse_result(target1, target2, ls_result, stop_words)
+        for word in __parse_result(target1, target2, ls_result, stop_words):
+            ls_result.append(word)
+    #print(ls_result)
+    # if result_cond4:
+    #     # print(4)
+    #     target1 = result_cond4.group('target')
+    #     target2 = result_cond4.group('target2')
+    #     for word in __parse_result(target1, target2, ls_result, stop_words):
+    #         ls_result.append(word)
+    # print(ls_result)
 
     return ls_result
 
 ls_msgs = ["What does bindery means?", "What does cat department and available stands for?", "What is the meaning of bindery, available and withdraw?", "What does bindery refers to?",
            "What is bindery?", "I saw a book on the website with status transferred and available, what does it mean?", "If a book has a status of bindery, what does it refers to?",
-           "book status withdraw", "bindery status"]
+           "book status withdraw", "bindery status", "what is cat department?"]
 
-ls_msgs = ["What does bindery means?"]
+# ls_msgs = ["What is cat department?"]
 
 ls_stop_words = get_stop_words('en')
-# message = "I saw a book on the website with status bindery, what does it mean?"
-# msg = "What is bindery and status of bindery?"
-# msg = "If a book has a status of bindery status or status of available status, what does it refers to?"
 
 for msg in ls_msgs:
     ls_word = __search_new(msg, ls_stop_words)
     print(ls_word)
-#print(__search(msg))

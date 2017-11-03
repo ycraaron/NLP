@@ -1,10 +1,11 @@
 from pycorenlp import StanfordCoreNLP
 from mysql_utils.db_manager import DBConn
-
+import csv
 nlp = StanfordCoreNLP('http://192.168.0.100:9000')
+nlp = StanfordCoreNLP('http://localhost:9000')
 
 
-def stanford_tree(line, annotators='pos'):
+def stanford_tree(line, annotators='pos,lemma'):
     output = nlp.annotate(line, properties={
         'annotators': annotators,
         'outputFormat': 'json'
@@ -29,15 +30,20 @@ def load_data():
 
 def deal_qa(msg):
     result = stanford_tree(msg)
-    print(result)
-    quit()
+    set_verb = set()
+    for sentence in result['sentences']:
+        for dic_token in sentence['tokens']:
+            if 'VB' in dic_token['pos']:
+                set_verb.add(dic_token['lemma'].lower())
+    return ','.join(list(set_verb))
 
 
 def entry():
     ls_msg, ls_respon = load_data()
 
     print(len(ls_msg), len(ls_respon))
-
+    fid = open('verb_result.txt', 'w')
+    # csv_writer = csv.writer(csv_file, dialect = ("excel"))
     i = 0  # current msg start
     while True:
         msg = ''
@@ -73,6 +79,10 @@ def entry():
         print('new msg id', next_msg_start)
         if end_tag == 1:
             break
-        ls_verb_msg = deal_qa(msg)
-        deal_qa(respon)
+        verb_msg = deal_qa(msg)
+        verb_respon = deal_qa(respon)
+        print(verb_msg)
+        print(verb_respon)
+        fid.write(verb_msg + '&&&' + verb_respon + '\n')
+
 entry()
